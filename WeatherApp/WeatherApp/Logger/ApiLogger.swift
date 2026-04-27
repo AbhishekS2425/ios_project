@@ -7,8 +7,6 @@
 
 import Foundation
 
-import Foundation
-
 enum APILogger {
     
     static func logRequest(_ request: URLRequest) {
