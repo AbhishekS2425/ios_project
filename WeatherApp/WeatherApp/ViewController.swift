@@ -64,12 +64,16 @@ class ViewController: UIViewController {
                 self.showAlert(message: self.viewModel.errorMessage)
             }
             else {
-                self.tempLabel.text = self.viewModel.temperature
-                self.weatherTypeLabel.text = self.viewModel.weatherType
-                self.latitude.text = self.viewModel.latitude
-                self.longitude.text = self.viewModel.longitude
+                self.updateData(model: self.viewModel)
             }
         }
+    }
+    
+    func updateData(model: WeatherViewModel?) {
+        self.tempLabel.text = model?.temperature
+        self.weatherTypeLabel.text = model?.weatherType
+        self.latitude.text = model?.latitude
+        self.longitude.text = model?.longitude
     }
     
     func showAlert(title: String = "Error",message: String,actionTitle: String = "OK") {
@@ -100,13 +104,4 @@ extension ViewController: UITextFieldDelegate {
         print("Clear button tapped")
         return true
     }
-    
-    //    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
-    //        print("Text changing")
-    //        if let city  = textField.text, city.isEmpty {
-    //             self.viewModel.temperature = ""
-    //             self.viewModel.description = ""
-    //        }
-    //        return true
-    //    }
 }
