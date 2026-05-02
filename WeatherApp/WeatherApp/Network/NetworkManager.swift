@@ -7,15 +7,14 @@
 
 import Foundation
 
-
 protocol NetworkManaging {
-    func request<T: Decodable>(_ endpoint: URLRequest,
+    func request<T>(_ endpoint: URLRequest,
                                completion: @escaping (Result<T, Error>) -> Void)
 }
 
 final class NetworkManager: NetworkManaging {
     
-    func request<T: Decodable>(_ endpoint: URLRequest,
+    func request<T>(_ endpoint: URLRequest,
                                completion: @escaping (Result<T, Error>) -> Void) {
         
         APILogger.logRequest(endpoint)
@@ -35,27 +34,28 @@ final class NetworkManager: NetworkManaging {
             }
             
             let statusCode = httpResponse.statusCode
-       
+            
             if (200...299).contains(statusCode) {
-                do {
-                    let decoded = try JSONDecoder().decode(T.self, from: data)
-                    completion(.success(decoded))
-                } catch {
-                    completion(.failure(error))
+                
+                if let jsonResult = try? JSONSerialization.jsonObject(with: data) as? JSON {
+                    var jsonData: WeatherResponse = WeatherResponse()
+                    jsonData = WeatherResponse.convertedWeatherResponse(json: jsonResult)
+                    completion(.success(jsonData as! T))
+                    return
                 }
+                completion(.failure(NSError(domain: "ParseError", code: -2)))
                 return
             }
             
-            let apiError = try? JSONDecoder().decode(APIErrorResponse.self, from: data)
+            let errorJSON = try? JSONSerialization.jsonObject(with: data) as? JSON
+            let message = errorJSON?["message"] as? String ?? "Something went wrong"
             
-            let message = apiError?.message ?? "Something went wrong"
-            
-            let error = NSError(
+            let apiError = NSError(
                 domain: "APIError",
                 code: statusCode,
                 userInfo: [NSLocalizedDescriptionKey: message]
             )
-            completion(.failure(error))
+            completion(.failure(apiError))
         }
         
         task.resume()

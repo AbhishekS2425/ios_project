@@ -38,9 +38,9 @@ final class WeatherViewModel {
     }
     
     private func updateUI(with data: WeatherResponse) {
-        latitude = "\(data.coord.lat)"
-        longitude = "\(data.coord.lon)"
-        temperature = "\(data.main.temp)°C"
+        latitude = "\(data.coord?.lat ?? 0.0)"
+        longitude = "\(data.coord?.lon ?? 0.0)"
+        temperature = "\(data.main?.temp ?? 0.0)°C"
         description = data.weather.first?.description ?? ""
         weatherType = data.weather.first?.main ?? ""
     }

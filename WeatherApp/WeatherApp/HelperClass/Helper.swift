@@ -68,3 +68,22 @@ extension Bool {
         return false
     }
 }
+
+extension Double {
+    
+    static func takeAsDoubleAlways(_ value: Any?) -> Double {
+        let double = 0.0
+        guard let value = value else { return 0 }
+        
+        if let string = value as? String {
+            return Double(string) ?? 0
+        }
+        if let int = value as? Int {
+            return Double(int)
+        }
+        if let double = value as? Double {
+            return double
+        }
+        return double
+    }
+}
