@@ -6,7 +6,7 @@
 
 import Foundation
 
-// MARK: - Welcome
+// MARK: - WeatherResponse
 class WeatherResponse: NSObject {
     var coord: Coord?
     var weather: [Weather] = [Weather]()
