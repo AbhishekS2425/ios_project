@@ -8,5 +8,6 @@
 import Foundation
 
 typealias JSON = [String : Any]
+typealias Parameters = [String: Any]
 
 let MESSAGE_KEY = "message"

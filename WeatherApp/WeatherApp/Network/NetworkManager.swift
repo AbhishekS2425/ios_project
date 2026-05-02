@@ -8,14 +8,18 @@
 import Foundation
 
 protocol NetworkManaging {
-    func request<T>(_ endpoint: URLRequest,
-                               completion: @escaping (Result<T, Error>) -> Void)
+    func request(_ endpoint: URLRequest, isTokenRequired: Bool,
+                    params: Parameters?,
+                            success: @escaping (_ result: JSON) -> Void,
+                            failure: @escaping (_ error: APIErrorModel) -> Void)
 }
 
 final class NetworkManager: NetworkManaging {
     
-    func request<T>(_ endpoint: URLRequest,
-                               completion: @escaping (Result<T, Error>) -> Void) {
+    func request(_ endpoint: URLRequest, isTokenRequired: Bool = false,
+                    params: Parameters? = nil,
+                    success: @escaping (_ result: JSON) -> Void,
+                    failure: @escaping (_ error: APIErrorModel) -> Void) {
         
         APILogger.logRequest(endpoint)
         let task = URLSession.shared.dataTask(with: endpoint) { data, response, error in
@@ -23,13 +27,13 @@ final class NetworkManager: NetworkManaging {
             APILogger.logResponse(data: data, response: response, error: error)
             
             if let error = error {
-                completion(.failure(error))
+                failure(APIErrorModel(statusCode: -1, message: error.localizedDescription))
                 return
             }
             
             guard let httpResponse = response as? HTTPURLResponse,
                   let data = data else {
-                completion(.failure(NSError(domain: "InvalidResponse", code: -1)))
+                failure(APIErrorModel(statusCode: -1, message: "Invalid response"))
                 return
             }
             
@@ -37,15 +41,15 @@ final class NetworkManager: NetworkManaging {
             
             if (200...299).contains(statusCode) {
                 
-                if let jsonResult = try? JSONSerialization.jsonObject(with: data) as? T {
-                    completion(.success(jsonResult))
+                if let jsonResult = try? JSONSerialization.jsonObject(with: data) as? JSON {
+                    success(jsonResult)
                     return
                 }
                 let apiError = APIErrorModel(
                     statusCode: statusCode,
                     message: "Something went wrong"
                 )
-                completion(.failure(apiError))
+                failure(apiError)
                 return
             }
             else {
@@ -56,7 +60,7 @@ final class NetworkManager: NetworkManaging {
                     statusCode: statusCode,
                     message: message
                 )
-                completion(.failure(apiError))
+                failure(apiError)
             }
         }
         

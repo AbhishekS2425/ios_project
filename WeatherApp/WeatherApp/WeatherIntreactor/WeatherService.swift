@@ -9,7 +9,7 @@ import Foundation
 
 protocol WeatherServiceProtocol {
     func fetchWeather(city: String,
-                      completion: @escaping (Result<WeatherResponse, Error>) -> Void)
+                      success: @escaping (_ weatherResponse: WeatherResponse) -> Void, failure: @escaping (_ error: APIErrorModel) -> Void)
 }
 
 final class WeatherService: WeatherServiceProtocol {
@@ -22,21 +22,19 @@ final class WeatherService: WeatherServiceProtocol {
     }
     
     func fetchWeather(city: String,
-                      completion: @escaping (Result<WeatherResponse, Error>) -> Void) {
+                      success: @escaping (_ weatherResponse: WeatherResponse) -> Void, failure: @escaping (_ error: APIErrorModel) -> Void) {
         
         let urlString = urn(city: city, apiKey: apiKey)
         
         guard let url = URL(string: urlString) else { return }
         
         let request = URLRequest(url: url)
-        networkManager.request(request) {(result: Result<JSON, Error>) in
-            switch result {
-            case .success(let json):
-                let weather = WeatherResponse.convertedWeatherResponse(json: json)
-                completion(.success(weather))
-            case .failure(let error):
-                completion(.failure(error))
-            }
+        networkManager.request(request, isTokenRequired: false, params: nil) { result in
+            let weatherResponse = WeatherResponse.convertedWeatherResponse(json: result)
+            success(weatherResponse)
+            
+        } failure: { error in
+            failure(error)
         }
     }
 }

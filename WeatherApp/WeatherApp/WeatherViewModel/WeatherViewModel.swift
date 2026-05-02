@@ -23,15 +23,14 @@ final class WeatherViewModel {
     }
     
     func getWeather(city: String, completion: @escaping () -> Void) {
-        service.fetchWeather(city: city) { [weak self] result in
-            
+        service.fetchWeather(city: city) {  weatherResponse in
             DispatchQueue.main.async {
-                switch result {
-                case .success(let data):
-                    self?.updateUI(with: data)
-                case .failure(let error):
-                    self?.errorMessage = error.localizedDescription
-                }
+                self.updateUI(with: weatherResponse)
+                completion()
+            }
+        } failure: { error in
+            DispatchQueue.main.async {
+                self.errorMessage = error.localizedDescription
                 completion()
             }
         }
