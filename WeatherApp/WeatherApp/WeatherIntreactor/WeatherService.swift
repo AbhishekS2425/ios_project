@@ -24,12 +24,25 @@ final class WeatherService: WeatherServiceProtocol {
     func fetchWeather(city: String,
                       completion: @escaping (Result<WeatherResponse, Error>) -> Void) {
         
-        let urlString = "https://api.openweathermap.org/data/2.5/weather?q=\(city)&appid=\(apiKey)&units=metric"
+        let urlString = urn(city: city, apiKey: apiKey)
         
         guard let url = URL(string: urlString) else { return }
         
         let request = URLRequest(url: url)
-        
-        networkManager.request(request, completion: completion)
+        networkManager.request(request) {(result: Result<JSON, Error>) in
+            switch result {
+            case .success(let json):
+                let weather = WeatherResponse.convertedWeatherResponse(json: json)
+                completion(.success(weather))
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
+    }
+}
+
+extension WeatherService {
+    func urn(city: String, apiKey: String) -> String {
+        "https://api.openweathermap.org/data/2.5/weather?q=\(city)&appid=\(apiKey)&units=metric"
     }
 }
