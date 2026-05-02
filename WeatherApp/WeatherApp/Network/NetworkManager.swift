@@ -37,25 +37,27 @@ final class NetworkManager: NetworkManaging {
             
             if (200...299).contains(statusCode) {
                 
-                if let jsonResult = try? JSONSerialization.jsonObject(with: data) as? JSON {
-                    var jsonData: WeatherResponse = WeatherResponse()
-                    jsonData = WeatherResponse.convertedWeatherResponse(json: jsonResult)
-                    completion(.success(jsonData as! T))
+                if let jsonResult = try? JSONSerialization.jsonObject(with: data) as? T {
+                    completion(.success(jsonResult))
                     return
                 }
-                completion(.failure(NSError(domain: "ParseError", code: -2)))
+                let apiError = APIErrorModel(
+                    statusCode: statusCode,
+                    message: "Something went wrong"
+                )
+                completion(.failure(apiError))
                 return
             }
-            
-            let errorJSON = try? JSONSerialization.jsonObject(with: data) as? JSON
-            let message = errorJSON?["message"] as? String ?? "Something went wrong"
-            
-            let apiError = NSError(
-                domain: "APIError",
-                code: statusCode,
-                userInfo: [NSLocalizedDescriptionKey: message]
-            )
-            completion(.failure(apiError))
+            else {
+                let errorJSON = try? JSONSerialization.jsonObject(with: data) as? JSON
+                let message = errorJSON?[MESSAGE_KEY] as? String ?? "Something went wrong"
+                
+                let apiError = APIErrorModel(
+                    statusCode: statusCode,
+                    message: message
+                )
+                completion(.failure(apiError))
+            }
         }
         
         task.resume()
