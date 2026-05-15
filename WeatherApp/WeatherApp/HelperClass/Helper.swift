@@ -78,12 +78,15 @@ extension Double {
         if let string = value as? String {
             return Double(string) ?? 0
         }
+        
         if let int = value as? Int {
             return Double(int)
         }
+        
         if let double = value as? Double {
             return double
         }
+        
         return double
     }
 }

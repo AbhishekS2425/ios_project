@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Combine
 
 final class WeatherViewModel {
     
@@ -17,23 +18,33 @@ final class WeatherViewModel {
     var latitude: String = ""
     var longitude: String = ""
     var errorMessage: String = ""
-    
+    private var cancellables = Set<AnyCancellable>()
+
     init(service: WeatherServiceProtocol = WeatherService()) {
         self.service = service
     }
     
-    func getWeather(city: String, completion: @escaping () -> Void) {
-        service.fetchWeather(city: city) {  weatherResponse in
-            DispatchQueue.main.async {
-                self.updateUI(with: weatherResponse)
+    func getWeather(city: String, completion: @escaping () -> Void)  {
+        service.fetchWeather(city: city)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] completionResult in
+                
+                switch completionResult {
+                    
+                case .finished:
+                    print("API Success")
+                    
+                case .failure(let error):
+                    self?.errorMessage = error.message
+                    completion()
+                }
+                
+            } receiveValue: { [weak self] weatherResponse in
+                
+                self?.updateUI(with: weatherResponse)
                 completion()
             }
-        } failure: { error in
-            DispatchQueue.main.async {
-                self.errorMessage = error.localizedDescription
-                completion()
-            }
-        }
+            .store(in: &cancellables)
     }
     
     private func updateUI(with data: WeatherResponse) {

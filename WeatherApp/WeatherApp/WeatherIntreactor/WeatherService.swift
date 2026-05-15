@@ -6,10 +6,10 @@
 //
 
 import Foundation
+import Combine
 
 protocol WeatherServiceProtocol {
-    func fetchWeather(city: String,
-                      success: @escaping (_ weatherResponse: WeatherResponse) -> Void, failure: @escaping (_ error: APIErrorModel) -> Void)
+    func fetchWeather(city: String) -> AnyPublisher<WeatherResponse, APIErrorModel>
 }
 
 final class WeatherService: WeatherServiceProtocol {
@@ -21,21 +21,35 @@ final class WeatherService: WeatherServiceProtocol {
         self.networkManager = networkManager
     }
     
-    func fetchWeather(city: String,
-                      success: @escaping (_ weatherResponse: WeatherResponse) -> Void, failure: @escaping (_ error: APIErrorModel) -> Void) {
-        
+    func fetchWeather(city: String) -> AnyPublisher<WeatherResponse, APIErrorModel> {
         let urlString = urn(city: city, apiKey: apiKey)
         
-        guard let url = URL(string: urlString) else { return }
+        guard let url = URL(string: urlString) else { return Fail(
+            error: APIErrorModel(
+                statusCode: -1,
+                message: "Invalid URL"
+            )
+        )
+        .eraseToAnyPublisher()
+        }
         
         let request = URLRequest(url: url)
-        networkManager.request(request, isTokenRequired: false, params: nil) { result in
-            let weatherResponse = WeatherResponse.convertedWeatherResponse(json: result)
-            success(weatherResponse)
-            
-        } failure: { error in
-            failure(error)
-        }
+        return networkManager.request(request, isTokenRequired: false, params: nil)
+            .tryMap { json in
+                return WeatherResponse.convertedWeatherResponse(json: json)
+            }
+            .mapError { error in
+                
+                if let apiError = error as? APIErrorModel {
+                    return apiError
+                }
+                
+                return APIErrorModel(
+                    statusCode: -1,
+                    message: error.localizedDescription
+                )
+            }
+            .eraseToAnyPublisher()
     }
 }
 
