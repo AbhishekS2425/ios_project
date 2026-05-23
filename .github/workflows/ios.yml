@@ -2,31 +2,37 @@ name: iOS CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
 
   pull_request:
-    branches: [ "main" ]
+    branches:
+      - main
 
 jobs:
   build-and-test:
-    runs-on: macos-latest
+    runs-on: macos-14
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Show Folder Structure
-        run: ls -R
-
       - name: Select Xcode
         run: sudo xcode-select -switch /Applications/Xcode.app
+
+      - name: Show Xcode Version
+        run: xcodebuild -version
+
+      - name: Show Available Simulators
+        run: xcrun simctl list devices
 
       - name: Build App
         run: |
           xcodebuild clean build \
           -project WeatherApp/WeatherApp.xcodeproj \
           -scheme WeatherApp \
-          -destination 'platform=iOS Simulator,name=iPhone 15' \
+          -sdk iphonesimulator \
+          -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.6' \
           CODE_SIGNING_ALLOWED=NO
 
       - name: Run Unit Tests
@@ -34,5 +40,6 @@ jobs:
           xcodebuild test \
           -project WeatherApp/WeatherApp.xcodeproj \
           -scheme WeatherApp \
-          -destination 'platform=iOS Simulator,name=iPhone 15' \
+          -sdk iphonesimulator \
+          -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.6' \
           CODE_SIGNING_ALLOWED=NO
