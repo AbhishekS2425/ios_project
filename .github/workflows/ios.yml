@@ -1,4 +1,3 @@
-```yaml
 name: iOS CI
 
 on:
@@ -37,4 +36,3 @@ jobs:
           -scheme WeatherApp \
           -destination 'platform=iOS Simulator,name=iPhone 15' \
           CODE_SIGNING_ALLOWED=NO
-```
